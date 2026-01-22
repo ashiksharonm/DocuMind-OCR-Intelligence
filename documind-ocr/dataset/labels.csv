@@ -1,0 +1,3 @@
+doc_id,file_path,vendor_name,invoice_date,total_amount,currency
+1,invoice_001.jpg,Acme Corp,2023-10-25,1250.00,USD
+2,invoice_002.pdf,Global Tech,2024-01-15,3400.50,USD

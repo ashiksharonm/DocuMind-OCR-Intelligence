@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    container_name: documind-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app:ro
+      - ./dataset:/app/dataset
+      - ./reports:/app/reports
+      - ./artifacts:/app/artifacts
+    environment:
+      - LOG_LEVEL=INFO
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

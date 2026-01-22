@@ -1,0 +1,41 @@
+name: DocuMind CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get install -y tesseract-ocr poppler-utils
+        python -m pip install --upgrade pip
+        pip install -r documind-ocr/requirements.txt
+        
+    - name: Lint with Ruff
+      run: |
+        cd documind-ocr
+        ruff check .
+        
+    - name: Run tests
+      run: |
+        cd documind-ocr
+        # Create empty test if none exist to avoid exit code 5
+        mkdir -p tests
+        touch tests/__init__.py
+        if [ -z "$(ls -A tests)" ]; then
+           echo "No tests yet"
+        else
+           pytest tests/
+        fi
