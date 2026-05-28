@@ -7,35 +7,58 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: documind-ocr
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-        
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y tesseract-ocr poppler-utils
-        python -m pip install --upgrade pip
-        pip install -r documind-ocr/requirements.txt
-        
-    - name: Lint with Ruff
-      run: |
-        cd documind-ocr
-        ruff check .
-        
-    - name: Run tests
-      run: |
-        cd documind-ocr
-        # Create empty test if none exist to avoid exit code 5
-        mkdir -p tests
-        touch tests/__init__.py
-        if [ -z "$(ls -A tests)" ]; then
-           echo "No tests yet"
-        else
-           pytest tests/
-        fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            tesseract-ocr \
+            poppler-utils \
+            libglib2.0-0
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download spaCy model
+        run: python -m spacy download en_core_web_sm
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Type-check with mypy
+        run: mypy app/ --ignore-missing-imports --no-strict-optional
+        continue-on-error: true   # non-blocking until type coverage is complete
+
+      - name: Run unit tests
+        run: |
+          mkdir -p tests
+          touch tests/__init__.py
+          pytest tests/ -v --tb=short
+
+      - name: Run preprocessing benchmark
+        run: python scripts/benchmark_preprocess.py
+
+      - name: Upload evaluation report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-reports
+          path: documind-ocr/reports/
+          retention-days: 14

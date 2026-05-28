@@ -1,11 +1,17 @@
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
 .DS_Store
 .env
 venv/
 env/
+.venv/
 artifacts/
 reports/
 .idea/
 .vscode/
+*.egg-info/
+dist/
+build/
+.mypy_cache/

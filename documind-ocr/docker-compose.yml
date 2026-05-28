@@ -1,14 +1,35 @@
 services:
   api:
-    build: .
+    build:
+      context: .
+      target: runtime
     container_name: documind-api
+    image: documind-ocr:latest
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app/app:ro
       - ./dataset:/app/dataset
       - ./reports:/app/reports
       - ./artifacts:/app/artifacts
     environment:
       - LOG_LEVEL=INFO
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ARTIFACTS_DIR=/app/artifacts
+      - REPORTS_DIR=/app/reports
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 2
+      --log-level info

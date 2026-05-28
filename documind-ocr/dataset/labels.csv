@@ -1,3 +1,6 @@
-doc_id,file_path,vendor_name,invoice_date,total_amount,currency
-1,invoice_001.jpg,Acme Corp,2023-10-25,1250.00,USD
-2,invoice_002.pdf,Global Tech,2024-01-15,3400.50,USD
+doc_id,file_path,vendor_name,invoice_date,total_amount,doc_type
+DOC001,restaurant_invoice_001.jpg,Green Garden Restaurant,2024-01-15,1250.00,invoice
+DOC002,foodtech_receipt_001.jpg,Swiggy Operations Pvt Ltd,2024-01-20,348.50,receipt
+DOC003,delivery_invoice_001.jpg,Zomato Hyper-local Foods,2024-02-03,875.00,invoice
+DOC004,pos_receipt_001.jpg,Burger Barn POS Terminal,2024-02-10,62.75,receipt
+DOC005,catering_invoice_001.jpg,FreshMenu Catering Co,2024-02-18,4200.00,invoice

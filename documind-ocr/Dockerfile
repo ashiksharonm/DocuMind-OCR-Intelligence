@@ -1,38 +1,62 @@
-FROM python:3.11-slim
+# ── Stage 1: Builder ────────────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
 
-# Install system dependencies
-# poppler-utils for pdf2image
-# tesseract-ocr for pytesseract
-# libgl1-mesa-glx for opencv (sometimes needed even with headless, but headless usually avoids it. Including just in case logic needs it or other libs)
-# build-essential for compiling some python libs if needed
-RUN apt-get update && apt-get install -y \
+WORKDIR /build
+
+# System deps needed to compile Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+
+# ── Stage 2: Runtime ────────────────────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+LABEL maintainer="DocuMind OCR Team"
+LABEL description="DocuMind OCR Intelligence — food-tech document extraction API"
+LABEL version="1.0.0"
+
+# System runtime dependencies (pinned for reproducibility)
+#   tesseract-ocr : OCR fallback engine
+#   poppler-utils : PDF → image conversion via pdf2image
+#   libglib2.0-0  : OpenCV shared library dependency
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr=5.3.0-2 \
     poppler-utils \
-    tesseract-ocr \
-    libtesseract-dev \
     libglib2.0-0 \
-    lsb-release \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy pre-built Python packages from builder stage
+COPY --from=builder /install /usr/local
+
 WORKDIR /app
 
-# Copy requirements first for cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Download spacy model
+# Download spaCy model (run as a build step so it's cached in the image layer)
 RUN python -m spacy download en_core_web_sm
 
-# Copy app code
+# Copy application source
 COPY . .
 
-# Create artifacts directory
-RUN mkdir -p artifacts reports dataset
+# Create required runtime directories
+RUN mkdir -p artifacts reports dataset/sample_docs
 
-# Expose port
+# Non-root user for security
+RUN useradd --system --uid 1001 --no-create-home documind \
+    && chown -R documind:documind /app
+USER documind
+
+# Expose API port
 EXPOSE 8000
 
-# Command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Health check — verifies the API is alive within 30 s of start
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Start the API server
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
+     "--workers", "2", "--log-level", "info"]
