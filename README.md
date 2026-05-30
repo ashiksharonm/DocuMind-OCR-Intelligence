@@ -257,7 +257,11 @@ curl http://localhost:8000/health
 
 ---
 
-## Setup & Running
+### Scalability & Operations
+- **Async Batch Processing** — `/batch` endpoint accepts a ZIP archive; processes all documents concurrently via `asyncio.gather` + `ThreadPoolExecutor`
+- **Performance Middleware** — `LatencyMiddleware` tracks p50/p95/p99 per request, warns on SLA breaches, exposes `X-Process-Time-Ms` response header
+- **Observability** — `/metrics` endpoint with real-time latency stats; `/health` for load-balancer checks
+- **Containerised** — multi-stage Docker build, non-root user, `HEALTHCHECK`, resource limits
 
 ### Prerequisites
 
