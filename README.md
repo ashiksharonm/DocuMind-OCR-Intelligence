@@ -6,13 +6,13 @@
   <img src="https://img.shields.io/badge/Docker-containerised-2496ED?logo=docker&logoColor=white" alt="Docker"/>
   <img src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white" alt="CI"/>
   <img src="https://img.shields.io/badge/OCR-EasyOCR%20%2B%20Tesseract-orange" alt="OCR"/>
-  <img src="https://img.shields.io/badge/Accuracy-95%25%2B-brightgreen" alt="Accuracy"/>
-  <img src="https://img.shields.io/badge/Latency-%3C2s-green" alt="Latency"/>
   <img src="https://img.shields.io/badge/License-GPL--3.0-lightgrey" alt="License"/>
 </p>
 
 > **End-to-end document intelligence pipeline** for food-tech operational reviews.  
-> Extracts structured data from invoices, delivery receipts, and POS slips with **95%+ field-level accuracy** and **sub-2-second transaction times**.
+> Extracts structured data (vendor, date, amount) from invoices, delivery receipts, and POS slips using preprocessing, hybrid OCR and rule/NLP-based field extraction.
+>
+> **Status:** portfolio prototype. The bundled evaluation set is only **5 labelled documents** (`documind-ocr/dataset/labels.csv`), so no accuracy or latency figure here is statistically meaningful.
 
 ---
 
@@ -43,13 +43,13 @@ DocuMind OCR Intelligence is a **scalable computer vision + NLP data processing 
 
 ## Key Metrics
 
-| Metric | Value | How it's measured |
-|---|---|---|
-| **Field extraction accuracy** | **95%+** | F1 score across vendor / date / amount fields on labelled dataset |
-| **Manual overhead reduction** | **≥ 85%** | Automated preprocessing (ms/doc) vs. 30 s manual baseline |
-| **Transaction latency** | **< 2 000 ms** | p99 measured by `LatencyMiddleware` via `/metrics` endpoint |
-| **Batch throughput** | **4× concurrent** | `asyncio.gather` + `ThreadPoolExecutor(max_workers=4)` |
-| **Supported formats** | PDF, JPG, PNG, MP4/AVI (video frames) | Multi-format ingestion pipeline |
+| Item | Status |
+|---|---|
+| Field extraction accuracy | Not established. Eval set is 5 documents; run `scripts/evaluate.py` for your own numbers |
+| Preprocessing time | Measured per document by `scripts/benchmark_preprocess.py` (hardware dependent; the "manual baseline" it compares against is an assumed 30 s, not a measurement) |
+| End-to-end latency | Tracked at runtime by `LatencyMiddleware` via `/metrics`; no committed benchmark |
+| Batch concurrency | `asyncio.gather` + `ThreadPoolExecutor(max_workers=4)` (configuration, not a measured speedup) |
+| Supported formats | PDF, JPG, PNG, MP4/AVI (video frames) |
 
 ---
 
@@ -71,7 +71,6 @@ DocuMind OCR Intelligence is a **scalable computer vision + NLP data processing 
             │             Preprocessing Pipeline                        │
             │  Deskew → Grayscale → CLAHE → Denoise → Threshold →      │
             │  Morphological Clean                                      │
-            │  [85%+ overhead reduction vs manual interpretation]       │
             └──────────────────────────┬──────────────────────────────┘
                                        │
             ┌──────────────────────────▼──────────────────────────────┐
@@ -232,6 +231,7 @@ curl http://localhost:8000/metrics
 ```
 
 ```json
+// illustrative example response, not measured values
 {
   "total_requests": 142,
   "p50_ms": 680.4,
@@ -341,7 +341,7 @@ python scripts/evaluate.py
 # → Report saved to: reports/eval_report.json
 ```
 
-**Output format:**
+**Illustrative output format (example numbers only, not results from this repo's 5-document set):**
 
 ```
 ============================================================
@@ -356,7 +356,6 @@ python scripts/evaluate.py
   Document classification acc : 97.00%
   Avg preprocessing time      : 24.8 ms/doc
 
-  ✅ TARGET MET — 95%+ accuracy goal: 95.40%
 ============================================================
 ```
 
@@ -376,9 +375,7 @@ python scripts/benchmark_preprocess.py
 
   Automated total     : 0.482s  (24.1 ms/doc)
 
-  ✅ Overhead reduction: 99.9%
-     (Target: ≥ 85%)
-  ✅ BENCHMARK PASSED — 85%+ overhead reduction achieved!
+  Overhead reduction vs assumed 30 s manual baseline: (illustrative)
 ============================================================
 ```
 
@@ -421,7 +418,7 @@ DocuMindOCRIntelligence/
     │   └── sample_docs/             # Place test documents here
     ├── scripts/
     │   ├── evaluate.py              # F1 / accuracy evaluation
-    │   └── benchmark_preprocess.py  # 85% overhead reduction benchmark
+    │   └── benchmark_preprocess.py  # preprocessing timing benchmark
     ├── tests/
     │   ├── test_pipelines.py        # Core pipeline unit tests
     │   ├── test_annotation_loader.py # CVAT · Label Studio · Roboflow tests
