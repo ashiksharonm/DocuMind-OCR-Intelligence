@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: documind-ocr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Light dependencies only: the unit tests do not import easyocr/pytesseract.
+      - run: pip install numpy==1.26.4 opencv-python-headless==4.10.0.84 dateparser==1.2.0 spacy==3.7.5 pytest lxml pandas pydantic pydantic-settings click
+      - run: PYTHONPATH=. pytest tests -q
