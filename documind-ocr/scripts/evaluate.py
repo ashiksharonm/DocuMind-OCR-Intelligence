@@ -5,12 +5,7 @@ evaluate.py — Evaluation & Accuracy Benchmarking Script
 Runs the full DocuMind OCR pipeline against labelled ground-truth data and
 reports field-level accuracy, precision, recall, and F1 scores.
 
-Targets
--------
-* Overall field extraction accuracy  ≥ 95 %
-* Vendor extraction F1               ≥ 0.90
-* Date extraction F1                 ≥ 0.93
-* Amount extraction F1               ≥ 0.95
+Note: the bundled dataset is a tiny smoke-test set; no accuracy target is claimed.
 
 Run
 ---
@@ -270,8 +265,8 @@ def evaluate():
     print(f"  Document classification acc : {doc_type_acc:.2%}")
     print(f"  Avg preprocessing time      : {avg_preprocess_ms:.1f} ms/doc")
 
-    passed = overall_acc >= 0.95
-    print(f"\n  {'✅ TARGET MET' if passed else '⚠️  BELOW TARGET'} — 95%+ accuracy goal: {overall_acc:.2%}")
+    print(f"\n  NOTE: this small local set ({total_docs} docs) is a smoke test, not an accuracy claim.")
+    print("        See scripts/evaluate_public.py for the public-dataset evaluation.")
 
     # ── Save report ──────────────────────────────────────────────────────────
     os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -288,7 +283,6 @@ def evaluate():
         "preprocessing": {
             "avg_ms_per_doc": round(avg_preprocess_ms, 2),
         },
-        "target_met_95pct": passed,
         "details": results,
     }
 

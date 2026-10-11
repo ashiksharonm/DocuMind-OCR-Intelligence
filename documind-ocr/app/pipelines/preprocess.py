@@ -4,7 +4,7 @@ Image preprocessing pipeline for DocuMind OCR.
 Provides a full chain of preprocessing steps optimised for food-tech operational
 documents (restaurant invoices, delivery receipts, point-of-sale slips).
 Timing statistics are collected at each stage so the reduction in manual visual
-interpretation overhead can be quantified (target: ≥85 % reduction).
+interpretation overhead can be quantified (modelled against an assumed manual baseline; not a measured result).
 """
 
 import time
