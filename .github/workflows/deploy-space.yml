@@ -13,7 +13,7 @@ jobs:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       HF_SPACE: ${{ vars.HF_SPACE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Skip when not configured
         if: env.HF_TOKEN == '' || env.HF_SPACE == ''
         run: echo "HF_TOKEN secret / HF_SPACE variable not set; skipping deploy."
