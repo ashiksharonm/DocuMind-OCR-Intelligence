@@ -76,10 +76,10 @@ def correct_skew(img: np.ndarray) -> np.ndarray:
         return img
 
     angle = cv2.minAreaRect(coords)[-1]
-    if angle < -45:
-        angle = -(90 + angle)
-    else:
-        angle = -angle
+    # minAreaRect reports (-90, 0] before OpenCV 4.5.1 and (0, 90] after, and a rectangle is
+    # the same shape every 90 degrees. Fold into [-45, 45) so both conventions agree and an
+    # axis-aligned page is never "corrected" by ~90 degrees.
+    angle = -(((angle + 45) % 90) - 45)
 
     # Ignore tiny angles to avoid unnecessary interpolation
     if abs(angle) < 0.5:

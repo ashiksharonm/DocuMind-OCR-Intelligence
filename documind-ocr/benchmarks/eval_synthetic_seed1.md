@@ -1,6 +1,6 @@
 # Synthetic evaluation (100 docs, seed 1, OCR tesseract)
 
-Overall field accuracy: **0.9367** over 300 fields; 505.6 ms/doc end to end on arm64.
+Overall field accuracy: **0.9367** over 300 fields; 539.3 ms/doc end to end on arm64.
 
 | field | n | accuracy |
 |---|---|---|
@@ -20,7 +20,7 @@ Overall field accuracy: **0.9367** over 300 fields; 505.6 ms/doc end to end on a
 |---|---|---|---|---|---|
 | 0.5 | 10 | 0.0333 | 0.9655 | 0.1 | 9/100 |
 | 0.6 | 12 | 0.04 | 0.9722 | 0.0833 | 8/100 |
-| 0.7 | 72 | 0.24 | 0.9781 | 0.8056 | 1/100 |
-| 0.75 | 78 | 0.26 | 0.991 | 0.7821 | 1/100 |
-| 0.8 | 88 | 0.2933 | 1.0 | 0.7841 | 0/100 |
+| 0.7 | 16 | 0.0533 | 0.9789 | 0.1875 | 6/100 |
+| 0.75 | 22 | 0.0733 | 0.9928 | 0.2273 | 2/100 |
+| 0.8 | 38 | 0.1267 | 1.0 | 0.5 | 0/100 |
 | 0.85 | 147 | 0.49 | 1.0 | 0.8707 | 0/100 |

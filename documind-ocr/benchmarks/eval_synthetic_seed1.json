@@ -8,7 +8,7 @@
     "machine": "arm64",
     "platform": "macOS-27.0.1-arm64-arm-64bit"
   },
-  "ms_per_doc_pipeline": 505.6,
+  "ms_per_doc_pipeline": 539.3,
   "overall": {
     "n": 300,
     "accuracy": 0.9367
@@ -72,31 +72,31 @@
     },
     {
       "threshold": 0.7,
-      "auto_fields": 228,
-      "flagged_fields": 72,
-      "share_flagged": 0.24,
-      "auto_accuracy": 0.9781,
-      "flagged_accuracy": 0.8056,
-      "docs_fully_auto_with_an_error": 1,
+      "auto_fields": 284,
+      "flagged_fields": 16,
+      "share_flagged": 0.0533,
+      "auto_accuracy": 0.9789,
+      "flagged_accuracy": 0.1875,
+      "docs_fully_auto_with_an_error": 6,
       "n_docs": 100
     },
     {
       "threshold": 0.75,
-      "auto_fields": 222,
-      "flagged_fields": 78,
-      "share_flagged": 0.26,
-      "auto_accuracy": 0.991,
-      "flagged_accuracy": 0.7821,
-      "docs_fully_auto_with_an_error": 1,
+      "auto_fields": 278,
+      "flagged_fields": 22,
+      "share_flagged": 0.0733,
+      "auto_accuracy": 0.9928,
+      "flagged_accuracy": 0.2273,
+      "docs_fully_auto_with_an_error": 2,
       "n_docs": 100
     },
     {
       "threshold": 0.8,
-      "auto_fields": 212,
-      "flagged_fields": 88,
-      "share_flagged": 0.2933,
+      "auto_fields": 262,
+      "flagged_fields": 38,
+      "share_flagged": 0.1267,
       "auto_accuracy": 1.0,
-      "flagged_accuracy": 0.7841,
+      "flagged_accuracy": 0.5,
       "docs_fully_auto_with_an_error": 0,
       "n_docs": 100
     },

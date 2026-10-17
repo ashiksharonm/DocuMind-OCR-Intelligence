@@ -42,14 +42,14 @@ Optional `API_KEY` protects `/v1/*` (send `X-API-Key`). Design, data model and f
 
 ### Results (synthetic documents only)
 
-`scripts/evaluate_synthetic.py` renders 100 seeded invoices/receipts across five degradation levels (clean, noisy, rotated, degraded, severe), runs the real pipeline with Tesseract 5.5 on Apple M5 (CPU), and compares to the known labels. Exact match on vendor (case-insensitive), ISO date, and total (within 0.005). Routing at threshold 0.75:
+`scripts/evaluate_synthetic.py` renders 100 seeded invoices/receipts across five degradation levels (clean, noisy, rotated, degraded, severe), runs the real pipeline (Tesseract, CPU), and compares to the known labels. Exact match on vendor (case-insensitive), ISO date, and total (within 0.005). Routing at threshold 0.75:
 
 | seed | field accuracy | fields flagged | accuracy of auto-accepted | accuracy of flagged | docs fully auto with an error |
 |---|---|---|---|---|---|
-| 0 | 0.923 | 26.0% | 0.991 | 0.731 | 0/100 |
-| 1 | 0.937 | 26.0% | 0.991 | 0.782 | 1/100 |
+| 0 | 0.927 | 8.7% | 1.000 | 0.154 | 0/100 |
+| 1 | 0.937 | 7.3% | 0.993 | 0.227 | 2/100 |
 
-Accuracy by degradation (seed 0): clean 1.00, noisy 1.00, rotated 1.00, degraded 0.98, severe 0.63. The routing signal separates right from wrong fields on this set (auto-accepted fields are far more accurate than flagged ones), at the cost of reviewing about a quarter of the fields, most of which were actually correct. The arithmetic cross-check and the `severe` level were added after a first run on easier data showed little separation, so seed 1 is the only run not used while designing them; real scans will behave differently. Reports: [`documind-ocr/benchmarks`](documind-ocr/benchmarks); reproduce with `python scripts/evaluate_synthetic.py --n 100 --seed 0`.
+Accuracy by degradation (seed 0): clean 1.00, noisy 1.00, rotated 1.00, degraded 0.98, severe 0.65. Auto-accepted fields are far more accurate than flagged ones, and only about 8% of fields are flagged, most of them indeed wrong. Design iterations happened on this data: the arithmetic cross-check and the `severe` level were added after a first run on easier data showed little separation, and vendor-line confidence was raised after a run in which every vendor line was flagged. Both seeds were re-run after the last change, so neither is a clean holdout, and real scans will behave differently. Environment: Tesseract 5.5.2, OpenCV 4.10.0, numpy 1.26.4, spaCy 3.7.5 (the pinned stack), Apple M5 CPU, about 0.5 s per document. Reports: [`documind-ocr/benchmarks`](documind-ocr/benchmarks); reproduce with `python scripts/evaluate_synthetic.py --n 100 --seed 0`.
 
 ### Limitations
 

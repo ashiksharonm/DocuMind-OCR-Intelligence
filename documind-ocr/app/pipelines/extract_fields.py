@@ -132,9 +132,9 @@ def extract_vendor(text: str, tokens: List[Dict]) -> Dict[str, Any]:
     for line in lines[:6]:
         if _NOT_VENDOR.search(line) or sum(c.isalpha() for c in line) < 3:
             continue
-        conf = 0.7 if len(line.split()) >= 2 else 0.55
+        conf = 0.85 if len(line.split()) >= 2 else 0.6
         if nlp and any(e.label_ == "ORG" for e in nlp(line).ents):
-            conf = 0.85
+            conf = 0.92
         return {"value": line, "confidence": conf, "raw": line}
     if lines:
         return {"value": lines[0], "confidence": 0.3, "raw": lines[0]}

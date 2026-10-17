@@ -447,3 +447,27 @@ def test_embedded_worker_processes_a_job(cfg, monkeypatch):
                 break
             time.sleep(0.05)
         assert c.get(f"/v1/jobs/{jid}").json()["status"] in (st.AUTO, st.PROCESSING)
+
+
+# ------------------------------------------------------------------- deskew
+def _skew_error(img: np.ndarray) -> float:
+    """Residual rotation (degrees) of dark text pixels, via minAreaRect folded to [-45, 45)."""
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, th = cv2.threshold(cv2.bitwise_not(gray), 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    pts = np.column_stack(np.where(th > 0))
+    return abs(((cv2.minAreaRect(pts)[-1] + 45) % 90) - 45)
+
+
+def test_deskew_leaves_straight_pages_alone_and_straightens_tilted_ones():
+    from app.pipelines.preprocess import correct_skew
+
+    label = make_label(__import__("random").Random(5))
+    straight = render(label, "clean", 5)
+    out = correct_skew(straight)
+    assert out.shape == straight.shape
+    assert float(np.abs(out.astype(int) - straight.astype(int)).mean()) < 2.0  # not rotated by ~90
+    h, w = straight.shape[:2]
+    for deg in (-3.0, 3.0):
+        m = cv2.getRotationMatrix2D((w / 2, h / 2), deg, 1.0)
+        tilted = cv2.warpAffine(straight, m, (w, h), borderValue=(255, 255, 255))
+        assert _skew_error(correct_skew(tilted)) < _skew_error(tilted)
