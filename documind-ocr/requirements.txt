@@ -16,7 +16,7 @@ numpy==1.26.4
 pandas==2.2.2
 spacy==3.7.5
 dateparser==1.2.0
-scikit-learn==1.4.2
+scikit-learn==1.9.1
 
 # Annotation workflow support
 lxml==5.2.2
