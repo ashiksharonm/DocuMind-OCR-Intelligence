@@ -17,15 +17,15 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 FROM python:3.11-slim AS runtime
 
 LABEL maintainer="DocuMind OCR Team"
-LABEL description="DocuMind OCR Intelligence — food-tech document extraction API"
-LABEL version="1.0.0"
+LABEL description="DocuMind OCR Intelligence: document extraction API with confidence-routed human review"
+LABEL version="1.1.0"
 
 # System runtime dependencies (pinned for reproducibility)
-#   tesseract-ocr : OCR fallback engine
+#   tesseract-ocr : default OCR engine
 #   poppler-utils : PDF → image conversion via pdf2image
 #   libglib2.0-0  : OpenCV shared library dependency
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    tesseract-ocr=5.3.0-2 \
+    tesseract-ocr \
     poppler-utils \
     libglib2.0-0 \
     curl \
@@ -43,7 +43,7 @@ RUN python -m spacy download en_core_web_sm
 COPY . .
 
 # Create required runtime directories
-RUN mkdir -p artifacts reports dataset/sample_docs
+RUN mkdir -p artifacts reports data dataset/sample_docs
 
 # Non-root user for security
 RUN useradd --system --uid 1001 --no-create-home documind \
@@ -55,8 +55,9 @@ EXPOSE 8000
 
 # Health check — verifies the API is alive within 30 s of start
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8000/healthz || exit 1
 
 # Start the API server
+# API by default; the compose "worker" service overrides this with `python -m app.review.worker`
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
      "--workers", "2", "--log-level", "info"]

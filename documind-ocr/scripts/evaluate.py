@@ -266,7 +266,8 @@ def evaluate():
     print(f"  Avg preprocessing time      : {avg_preprocess_ms:.1f} ms/doc")
 
     print(f"\n  NOTE: this small local set ({total_docs} docs) is a smoke test, not an accuracy claim.")
-    print("        See scripts/evaluate_public.py for the public-dataset evaluation.")
+    print("        The bundled labels.csv lists images that are not in the repo; use")
+    print("        scripts/evaluate_synthetic.py for a reproducible measurement.")
 
     # ── Save report ──────────────────────────────────────────────────────────
     os.makedirs(REPORTS_DIR, exist_ok=True)

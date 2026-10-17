@@ -2,10 +2,30 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
+  lint-type:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: documind-ocr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install ruff mypy pydantic pydantic-settings fastapi httpx numpy opencv-python-headless pillow
+      - run: ruff check app/review app/core app/main.py tests/test_review.py scripts/evaluate_synthetic.py space
+      - run: ruff format --check app/review app/core app/main.py tests/test_review.py scripts/evaluate_synthetic.py
+      - run: mypy --follow-imports=silent app/review app/main.py app/core
+
   test:
     runs-on: ubuntu-latest
     defaults:
@@ -16,6 +36,57 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      # Light dependencies only: the unit tests do not import easyocr/pytesseract.
-      - run: pip install numpy==1.26.4 opencv-python-headless==4.10.0.84 dateparser==1.2.0 spacy==3.7.5 pytest lxml pandas pydantic pydantic-settings click
-      - run: PYTHONPATH=. pytest tests -q
+          cache: pip
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr
+      # Light dependencies only: no easyocr/paddleocr; Tesseract is the default engine.
+      - run: pip install numpy==1.26.4 opencv-python-headless==4.10.0.84 pillow pytesseract dateparser==1.2.0 spacy==3.7.5 pytest pytest-cov lxml pandas pydantic pydantic-settings click fastapi httpx python-multipart fakeredis
+      - run: python -m spacy download en_core_web_sm
+      - run: pytest tests -q --cov=app --cov-report=term --cov-report=xml --cov-fail-under=75
+      - name: Synthetic evaluation (real Tesseract)
+        run: python scripts/evaluate_synthetic.py --n 40 --seed 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            documind-ocr/coverage.xml
+            documind-ocr/reports/eval_synthetic.*
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: documind-ocr
+          target: runtime
+          load: true
+          tags: documind-ocr:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Compose up (api + worker), upload a document, expect it to be routed
+        working-directory: documind-ocr
+        run: |
+          docker compose up -d
+          for i in $(seq 1 40); do curl -fs localhost:8000/healthz >/dev/null && break; sleep 3; done
+          curl -fs localhost:8000/readyz
+          python3 - <<'PY'
+          import json, subprocess, time, urllib.request
+          # a tiny image rendered by the app itself (no extra deps on the runner)
+          subprocess.run(["docker", "compose", "exec", "-T", "api", "python", "-c",
+              "import cv2;from app.review.synthetic import generate;cv2.imwrite('/tmp/d.png',generate(1,0)[0][2])"], check=True)
+          subprocess.run(["docker", "compose", "cp", "api:/tmp/d.png", "/tmp/d.png"], check=True)
+          out = subprocess.run(["curl", "-fs", "-F", "file=@/tmp/d.png", "localhost:8000/v1/jobs"],
+                               check=True, capture_output=True, text=True).stdout
+          jid = json.loads(out)["job_id"]
+          for _ in range(60):
+              job = json.load(urllib.request.urlopen(f"http://localhost:8000/v1/jobs/{jid}"))
+              if job["status"] not in ("queued", "processing"):
+                  break
+              time.sleep(2)
+          print(job["status"], {k: v["value"] for k, v in job["fields"].items()})
+          assert job["status"] in ("auto_accepted", "needs_review"), job
+          PY
+      - if: failure()
+        working-directory: documind-ocr
+        run: docker compose logs --tail=60

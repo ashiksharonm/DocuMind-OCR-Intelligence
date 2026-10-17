@@ -1,0 +1,26 @@
+# Pushes the Gradio demo to a Hugging Face Space, only when HF_TOKEN (secret) and HF_SPACE
+# (variable, e.g. user/documind-review) are set.
+name: Deploy Space
+on:
+  push:
+    branches: [main]
+    paths: ["documind-ocr/space/**", "documind-ocr/app/**"]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_SPACE: ${{ vars.HF_SPACE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip when not configured
+        if: env.HF_TOKEN == '' || env.HF_SPACE == ''
+        run: echo "HF_TOKEN secret / HF_SPACE variable not set; skipping deploy."
+      - name: Push to Space
+        if: env.HF_TOKEN != '' && env.HF_SPACE != ''
+        run: |
+          cp -r documind-ocr/app documind-ocr/space/app
+          cd documind-ocr/space && git init -q -b main && git add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "Deploy ${GITHUB_SHA::7}"
+          git push -f "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" main

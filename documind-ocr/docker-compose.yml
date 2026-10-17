@@ -3,33 +3,40 @@ services:
     build:
       context: .
       target: runtime
-    container_name: documind-api
     image: documind-ocr:latest
     ports:
       - "8000:8000"
+    environment: &env
+      LOG_LEVEL: INFO
+      DB_PATH: /app/data/documind.db
+      UPLOAD_DIR: /app/data/uploads
+      REVIEW_THRESHOLD: ${REVIEW_THRESHOLD:-0.75}
+      OCR_ENGINE: ${OCR_ENGINE:-tesseract}
+      API_KEY: ${API_KEY:-}
+      REDIS_URL: ${REDIS_URL:-}
     volumes:
+      - data:/app/data
       - ./dataset:/app/dataset
-      - ./reports:/app/reports
-      - ./artifacts:/app/artifacts
-    environment:
-      - LOG_LEVEL=INFO
-      - ARTIFACTS_DIR=/app/artifacts
-      - REPORTS_DIR=/app/reports
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-          cpus: "2.0"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    command: >
-      uvicorn app.main:app
-      --host 0.0.0.0
-      --port 8000
-      --workers 2
-      --log-level info
+  worker:
+    image: documind-ocr:latest
+    command: ["python", "-m", "app.review.worker"]
+    environment: *env
+    volumes:
+      - data:/app/data
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+  redis:  # optional: docker compose --profile redis up, with REDIS_URL=redis://redis:6379/0
+    image: redis:7-alpine
+    profiles: ["redis"]
+    restart: unless-stopped
+volumes:
+  data:
