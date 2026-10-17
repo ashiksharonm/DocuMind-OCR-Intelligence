@@ -1,5 +1,5 @@
 # ── Stage 1: Builder ────────────────────────────────────────────────────────
-FROM python:3.11-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /build
 
@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 
 # ── Stage 2: Runtime ────────────────────────────────────────────────────────
-FROM python:3.11-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 LABEL maintainer="DocuMind OCR Team"
 LABEL description="DocuMind OCR Intelligence: document extraction API with confidence-routed human review"
