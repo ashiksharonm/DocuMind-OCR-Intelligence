@@ -15,3 +15,7 @@ reports/
 dist/
 build/
 .mypy_cache/
+.coverage
+coverage.xml
+documind-ocr/data/
+.ruff_cache/
