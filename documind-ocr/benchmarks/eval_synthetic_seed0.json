@@ -1,0 +1,114 @@
+{
+  "n_docs": 100,
+  "seed": 0,
+  "threshold": 0.75,
+  "ocr_engine": "tesseract",
+  "environment": {
+    "python": "3.11.15",
+    "machine": "arm64",
+    "platform": "macOS-27.0.1-arm64-arm-64bit"
+  },
+  "ms_per_doc_pipeline": 512.1,
+  "overall": {
+    "n": 300,
+    "accuracy": 0.9267
+  },
+  "by_field": {
+    "vendor_name": {
+      "n": 100,
+      "accuracy": 1.0
+    },
+    "invoice_date": {
+      "n": 100,
+      "accuracy": 0.98
+    },
+    "total_amount": {
+      "n": 100,
+      "accuracy": 0.8
+    }
+  },
+  "by_level": {
+    "clean": {
+      "n": 60,
+      "accuracy": 1.0
+    },
+    "noisy": {
+      "n": 60,
+      "accuracy": 1.0
+    },
+    "rotated": {
+      "n": 60,
+      "accuracy": 1.0
+    },
+    "degraded": {
+      "n": 60,
+      "accuracy": 0.9833
+    },
+    "severe": {
+      "n": 60,
+      "accuracy": 0.65
+    }
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.5,
+      "auto_fields": 285,
+      "flagged_fields": 15,
+      "share_flagged": 0.05,
+      "auto_accuracy": 0.9719,
+      "flagged_accuracy": 0.0667,
+      "docs_fully_auto_with_an_error": 6,
+      "n_docs": 100
+    },
+    {
+      "threshold": 0.6,
+      "auto_fields": 284,
+      "flagged_fields": 16,
+      "share_flagged": 0.0533,
+      "auto_accuracy": 0.9754,
+      "flagged_accuracy": 0.0625,
+      "docs_fully_auto_with_an_error": 5,
+      "n_docs": 100
+    },
+    {
+      "threshold": 0.7,
+      "auto_fields": 279,
+      "flagged_fields": 21,
+      "share_flagged": 0.07,
+      "auto_accuracy": 0.9857,
+      "flagged_accuracy": 0.1429,
+      "docs_fully_auto_with_an_error": 3,
+      "n_docs": 100
+    },
+    {
+      "threshold": 0.75,
+      "auto_fields": 274,
+      "flagged_fields": 26,
+      "share_flagged": 0.0867,
+      "auto_accuracy": 1.0,
+      "flagged_accuracy": 0.1538,
+      "docs_fully_auto_with_an_error": 0,
+      "n_docs": 100
+    },
+    {
+      "threshold": 0.8,
+      "auto_fields": 267,
+      "flagged_fields": 33,
+      "share_flagged": 0.11,
+      "auto_accuracy": 1.0,
+      "flagged_accuracy": 0.3333,
+      "docs_fully_auto_with_an_error": 0,
+      "n_docs": 100
+    },
+    {
+      "threshold": 0.85,
+      "auto_fields": 159,
+      "flagged_fields": 141,
+      "share_flagged": 0.47,
+      "auto_accuracy": 1.0,
+      "flagged_accuracy": 0.844,
+      "docs_fully_auto_with_an_error": 0,
+      "n_docs": 100
+    }
+  ]
+}

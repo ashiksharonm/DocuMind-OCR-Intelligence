@@ -4,7 +4,7 @@ Image preprocessing pipeline for DocuMind OCR.
 Provides a full chain of preprocessing steps optimised for food-tech operational
 documents (restaurant invoices, delivery receipts, point-of-sale slips).
 Timing statistics are collected at each stage so the reduction in manual visual
-interpretation overhead can be quantified (target: ≥85 % reduction).
+interpretation overhead can be quantified (modelled against an assumed manual baseline; not a measured result).
 """
 
 import time
@@ -76,10 +76,10 @@ def correct_skew(img: np.ndarray) -> np.ndarray:
         return img
 
     angle = cv2.minAreaRect(coords)[-1]
-    if angle < -45:
-        angle = -(90 + angle)
-    else:
-        angle = -angle
+    # minAreaRect reports (-90, 0] before OpenCV 4.5.1 and (0, 90] after, and a rectangle is
+    # the same shape every 90 degrees. Fold into [-45, 45) so both conventions agree and an
+    # axis-aligned page is never "corrected" by ~90 degrees.
+    angle = -(((angle + 45) % 90) - 45)
 
     # Ignore tiny angles to avoid unnecessary interpolation
     if abs(angle) < 0.5:

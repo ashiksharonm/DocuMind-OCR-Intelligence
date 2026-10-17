@@ -124,7 +124,7 @@ def _process_single_image(img: np.ndarray, source_path: str) -> Dict[str, Any]:
 
     try:
         clean_img, preprocess_debug = preprocess_pipeline(img)
-        ocr_result = run_ocr(clean_img, engine="easyocr")
+        ocr_result = run_ocr(clean_img, engine=None)
         full_text = ocr_result["full_text"]
         tokens = ocr_result["tokens"]
         fields = extract_fields(full_text, tokens)

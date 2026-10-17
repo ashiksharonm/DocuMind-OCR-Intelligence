@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import dateparser
 import spacy
 from datetime import datetime
@@ -28,6 +28,7 @@ def extract_date(text: str, tokens: List[Dict]) -> Dict[str, Any]:
     candidates = re.finditer(date_regex, text)
     
     best_date = None
+    best_raw = None
     max_score = 0
     
     for match in candidates:
@@ -45,13 +46,27 @@ def extract_date(text: str, tokens: List[Dict]) -> Dict[str, Any]:
                 if score > max_score:
                     max_score = score
                     best_date = dt.strftime("%Y-%m-%d")
+                    best_raw = d_str
         except:
             continue
             
     if best_date:
-        return {"value": best_date, "confidence": max_score}
+        return {"value": best_date, "confidence": max_score, "raw": best_raw}
     
     return {"value": None, "confidence": 0.0}
+
+def _labelled(text: str, label: str) -> Optional[float]:
+    m = re.search("(?:" + label + r")[^0-9\n]{0,12}(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})", text, re.I)
+    return float(m.group(1).replace(",", "")) if m else None
+
+
+def _sum_check(text: str, total: float) -> Optional[bool]:
+    """True/False when a labelled subtotal and tax exist and do/don't add up to ``total``."""
+    sub, tax = _labelled(text, r"sub\s?total"), _labelled(text, r"\btax|\bgst|\bvat")
+    if sub is None or tax is None:
+        return None
+    return abs(sub + tax - total) <= 0.011
+
 
 def extract_amount(text: str, tokens: List[Dict]) -> Dict[str, Any]:
     """Extract Total Amount."""
@@ -82,7 +97,7 @@ def extract_amount(text: str, tokens: List[Dict]) -> Dict[str, Any]:
             elif 'subtotal' in context:
                 score = 0.3 # Less likely to be grand total
                 
-            candidates.append((val, score))
+            candidates.append((val, score, match.group(1)))
         except:
             continue
     
@@ -91,28 +106,40 @@ def extract_amount(text: str, tokens: List[Dict]) -> Dict[str, Any]:
         
     # Sort by score desc, then value desc (often total is max value)
     candidates.sort(key=lambda x: (x[1], x[0]), reverse=True)
-    best_val, best_score = candidates[0]
+    best_val, best_score, best_raw = candidates[0]
+    check = _sum_check(text, best_val)
+    if check is True:
+        best_score = max(best_score, 0.95)  # subtotal + tax equals the chosen total
+    elif check is False:
+        best_score = min(best_score, 0.4)  # the numbers do not add up: likely a misread
     
-    return {"value": best_val, "currency": "USD", "confidence": best_score} # Default currency USD for now
+    return {"value": best_val, "currency": "USD", "confidence": best_score, "raw": best_raw,
+            "sum_check": check} # Default currency USD for now
+
+_NOT_VENDOR = re.compile(
+    r"\b(invoice|receipt|bill to|date|due|total|subtotal|tax|thank|terminal|cash|change|"
+    r"tel|phone|gst|vat|order|table|qty)\b|\d{3,}|[#@:]", re.I)
+
 
 def extract_vendor(text: str, tokens: List[Dict]) -> Dict[str, Any]:
-    """Extract Vendor Name using Spacy and Layout."""
-    # Heuristic: Vendor is often at the top, largest text.
-    # tokens are sorted by Y
-    
-    # 1. Check top 5 lines for ORGS using Spacy
-    if nlp:
-        doc = nlp(text[:500]) # First 500 chars
-        for ent in doc.ents:
-            if ent.label_ == "ORG":
-                return {"value": ent.text, "confidence": 0.8}
-                
-    # 2. Fallback: First non-trivial line
-    lines = [L.strip() for L in text.split('\n') if len(L.strip()) > 3]
+    """Vendor = the first of the top lines that does not look like a label, date or number.
+
+    spaCy NER (when the model is installed) only raises confidence for a line that contains an
+    organisation entity; it no longer chooses the vendor, because it often picks labels such as
+    "Invoice Date" on OCR text.
+    """
+    lines = [L.strip() for L in text.split('\n') if len(L.strip()) > 2]
+    for line in lines[:6]:
+        if _NOT_VENDOR.search(line) or sum(c.isalpha() for c in line) < 3:
+            continue
+        conf = 0.85 if len(line.split()) >= 2 else 0.6
+        if nlp and any(e.label_ == "ORG" for e in nlp(line).ents):
+            conf = 0.92
+        return {"value": line, "confidence": conf, "raw": line}
     if lines:
-        return {"value": lines[0], "confidence": 0.4}
-        
+        return {"value": lines[0], "confidence": 0.3, "raw": lines[0]}
     return {"value": None, "confidence": 0.0}
+
 
 def extract_fields(text: str, tokens: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Main extraction routine."""

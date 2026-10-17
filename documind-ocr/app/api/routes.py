@@ -80,7 +80,7 @@ def save_artifacts(
         "Accepts a PDF or image file (JPG/PNG). Runs the full OCR pipeline: "
         "ingest → preprocess → OCR → classify → field extraction → summarise. "
         "Returns structured JSON with vendor, date, amount, doc type, and "
-        "confidence scores. Target latency: < 2 000 ms."
+        "confidence scores. Latency depends on hardware and document size; see /metrics."
     ),
 )
 async def extract_invoice(
@@ -115,7 +115,7 @@ async def extract_invoice(
         clean_img, preprocess_debug = preprocess_pipeline(img)
         preprocessing_ms_list.append(preprocess_debug.get("total_preprocessing_ms", 0))
 
-        page_result = run_ocr(clean_img, engine="easyocr")
+        page_result = run_ocr(clean_img)
         ocr_results.append(page_result)
         full_text_pages.append(page_result["full_text"])
         total_tokens.extend(page_result["tokens"])
@@ -135,7 +135,7 @@ async def extract_invoice(
     processing_time_ms = (time.time() - start_time) * 1000
 
     debug_info = DebugInfo(
-        ocr_engine=ocr_results[0]["engine"] if ocr_results else "easyocr",
+        ocr_engine=ocr_results[0]["engine"] if ocr_results else settings.OCR_ENGINE,
         pages=len(images),
         processing_time_ms=processing_time_ms,
     )
@@ -212,7 +212,7 @@ async def batch_extract(
     summary="Real-time API latency metrics",
     description=(
         "Returns p50/p95/p99 latency percentiles, average, max, and "
-        "SLA violation percentage (requests exceeding 2 000 ms). "
+        "share of requests slower than the configured 2 000 ms threshold. "
         "Metrics are computed from the last 1 000 requests."
     ),
 )

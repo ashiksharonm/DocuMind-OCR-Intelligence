@@ -1,0 +1,4 @@
+# Optional OCR engines and the Redis dispatcher (OCR_ENGINE=easyocr|paddleocr, REDIS_URL=...)
+easyocr==1.7.1
+paddleocr>=2.7
+redis>=5.0

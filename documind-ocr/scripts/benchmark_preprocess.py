@@ -2,7 +2,7 @@
 benchmark_preprocess.py — Preprocessing Overhead Reduction Benchmark
 =====================================================================
 
-Demonstrates the 85%+ reduction in manual visual interpretation overhead
+Models the reduction in manual visual interpretation overhead (against an assumed baseline)
 achieved by the DocuMind OCR automated preprocessing pipeline.
 
 Methodology
@@ -173,13 +173,9 @@ def run_benchmark():
     # --- Print summary ---
     print(f"\n  Manual total time   : {manual_total_s:.1f}s")
     print(f"  Automated total     : {auto_total_s:.3f}s  ({auto_stats['avg_ms_per_doc']:.1f} ms/doc)")
-    print(f"\n  ✅ Overhead reduction: {reduction_pct:.1f}%")
-    print(f"     (Target: ≥ 85%)")
-
-    if reduction_pct >= 85.0:
-        print("  ✅ BENCHMARK PASSED — 85%+ overhead reduction achieved!")
-    else:
-        print(f"  ⚠️  Below target ({reduction_pct:.1f}% < 85%) — review pipeline config.")
+    print(f"\n  Modelled overhead reduction: {reduction_pct:.1f}%")
+    print(f"  (vs an ASSUMED {MANUAL_REVIEW_TIME_PER_DOC_S}s/doc manual baseline - an assumption, not a measurement;")
+    print("   only the automated ms/doc figure above is measured.)")
 
     # --- Save report ---
     os.makedirs(REPORTS_DIR, exist_ok=True)

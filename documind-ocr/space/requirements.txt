@@ -1,0 +1,12 @@
+gradio==5.50.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+pillow
+pytesseract==0.3.10
+pdf2image==1.17.0
+dateparser==1.2.0
+spacy==3.7.5
+pandas
+pydantic
+pydantic-settings
+fastapi
