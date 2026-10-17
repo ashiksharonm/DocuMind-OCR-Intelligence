@@ -31,9 +31,21 @@ def _rows(job):
     return [[n, f["predicted"], f["confidence"], f["status"]] for n, f in job["fields"].items()]
 
 
+SAFE_ROOT = os.path.realpath(tempfile.gettempdir())
+
+
+def _safe(path):
+    """Gradio stores uploads under the temp dir; refuse any other location."""
+    real = os.path.realpath(path)
+    if not real.startswith(SAFE_ROOT + os.sep):
+        raise gr.Error("Unexpected file location")
+    return real
+
+
 def extract(path):
     if path is None:
         raise gr.Error("Upload an image or PDF first")
+    path = _safe(path)
     with open(path, "rb") as fh:
         data = fh.read()
     pages = load_pages(data)

@@ -39,7 +39,7 @@ jobs:
           cache: pip
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr
       # Light dependencies only: no easyocr/paddleocr; Tesseract is the default engine.
-      - run: pip install numpy==1.26.4 opencv-python-headless==4.10.0.84 pillow pytesseract dateparser==1.2.0 spacy==3.7.5 pytest pytest-cov lxml pandas pydantic pydantic-settings click fastapi httpx python-multipart fakeredis
+      - run: pip install numpy==1.26.4 opencv-python-headless==4.10.0.84 pillow pytesseract pdf2image dateparser==1.2.0 spacy==3.7.5 pytest pytest-cov lxml pandas pydantic pydantic-settings click fastapi httpx python-multipart fakeredis
       - run: python -m spacy download en_core_web_sm
       - run: pytest tests -q --cov=app --cov-report=term --cov-report=xml --cov-fail-under=75
       - name: Synthetic evaluation (real Tesseract)
@@ -84,7 +84,7 @@ jobs:
               if job["status"] not in ("queued", "processing"):
                   break
               time.sleep(2)
-          print(job["status"], {k: v["value"] for k, v in job["fields"].items()})
+          print(job["status"], {k: v["predicted"] for k, v in job["fields"].items()})
           assert job["status"] in ("auto_accepted", "needs_review"), job
           PY
       - if: failure()
